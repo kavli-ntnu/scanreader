@@ -312,12 +312,10 @@ class BaseScan():
         return num_lines_between_fields
 
     @property
-    @MoserValidation(validated=True)
     def is_slow_stack_with_fastZ(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 
     @property
-    @MoserValidation(validated=True)
     def field_offsets(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 

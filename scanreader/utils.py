@@ -115,3 +115,26 @@ def listify_index(index, dim_size):
         raise TypeError(error_msg)
 
     return index_as_list
+
+
+# Decorator for methods/properties to be "Moser-validated"
+
+class MoserValidation:
+
+    def __init__(self, validated):
+        self.validated = validated
+
+    def __call__(self, f):
+        def wrapped_f(*args):
+            if self.validated:
+                return f(*args)
+            else:
+                raise ValueError('Unvalidated method/property by the Moser Group (unsafe to use)')
+
+        if isinstance(f, property):
+            if not self.validated:
+                def error_func():
+                    raise ValueError('Unvalidated method/property by the Moser Group (unsafe to use)')
+                f.__get__ = error_func
+        else:
+            return wrapped_f

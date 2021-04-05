@@ -29,6 +29,7 @@ import numpy as np
 import re
 import itertools
 from . import utils
+from .utils import MoserValidation
 from .multiroi import ROI
 from .exceptions import FieldDimensionMismatch
 
@@ -70,6 +71,7 @@ class BaseScan():
         self.header = ''
 
     @property
+    @MoserValidation(validated=True)
     def tiff_files(self):
         if self._tiff_files is None:
             self._tiff_files = [TiffFile(filename) for filename in self.filenames]
@@ -83,12 +85,14 @@ class BaseScan():
             self._tiff_files = None
 
     @property
+    @MoserValidation(validated=True)
     def version(self):
         match = re.search(r"SI.?\.VERSION_MAJOR = '?(?P<version>[^\s']*)'?", self.header)
         version = match.group('version') if match else None
         return version
 
     @property
+    @MoserValidation(validated=True)
     def is_slow_stack(self):
         """ True if fastZ is disabled. All frames for one slice are recorded first before
         moving to the next slice."""
@@ -97,6 +101,7 @@ class BaseScan():
         return is_slow_stack
 
     @property
+    @MoserValidation(validated=True)
     def is_multiROI(self):
         """Only True if mroiEnable exists (2016b and up) and is set to True."""
         match = re.search(r'hRoiManager\.mroiEnable = (?P<is_multiROI>.)', self.header)
@@ -104,6 +109,7 @@ class BaseScan():
         return is_multiROI
 
     @property
+    @MoserValidation(validated=True)
     def num_channels(self):
         match = re.search(r'hChannels\.channelSave = (?P<channels>.*)', self.header)
         if match:
@@ -114,6 +120,7 @@ class BaseScan():
         return num_channels
 
     @property
+    @MoserValidation(validated=True)
     def requested_scanning_depths(self):
         match = re.search(r'hStackManager\.zs = (?P<zs>.*)', self.header)
         if match:
@@ -124,6 +131,7 @@ class BaseScan():
         return scanning_depths
 
     @property
+    @MoserValidation(validated=True)
     def num_scanning_depths(self):
         if self.is_slow_stack:
             """ Number of scanning depths actually recorded in this stack."""
@@ -134,10 +142,12 @@ class BaseScan():
         return num_scanning_depths
 
     @property
+    @MoserValidation(validated=True)
     def scanning_depths(self):
         return self.requested_scanning_depths[:self.num_scanning_depths]
 
     @property
+    @MoserValidation(validated=True)
     def num_requested_frames(self):
         if self.is_slow_stack:
              match = re.search(r'hStackManager\.framesPerSlice = (?P<num_frames>.*)',
@@ -149,6 +159,7 @@ class BaseScan():
         return num_requested_frames
 
     @property
+    @MoserValidation(validated=True)
     def num_frames(self):
         """ Each tiff page is an image at a given channel, scanning depth combination."""
         if self.is_slow_stack:
@@ -160,18 +171,21 @@ class BaseScan():
         return num_frames
 
     @property
+    @MoserValidation(validated=True)
     def is_bidirectional(self):
         match = re.search(r'hScan2D\.bidirectional = (?P<is_bidirectional>.*)', self.header)
         is_bidirectional = (match.group('is_bidirectional') == 'true') if match else False
         return is_bidirectional
 
     @property
+    @MoserValidation(validated=True)
     def scanner_frequency(self):
         match = re.search(r'hScan2D\.scannerFrequency = (?P<scanner_freq>.*)', self.header)
         scanner_frequency = float(match.group('scanner_freq')) if match else None
         return scanner_frequency
 
     @property
+    @MoserValidation(validated=True)
     def seconds_per_line(self):
         if np.isnan(self.scanner_frequency):
             match = re.search(r'hRoiManager\.linePeriod = (?P<secs_per_line>.*)', self.header)
@@ -182,19 +196,23 @@ class BaseScan():
         return seconds_per_line
 
     @property
+    @MoserValidation(validated=True)
     def _num_pages(self):
         num_pages = sum([len(tiff_file.pages) for tiff_file in self.tiff_files])
         return num_pages
 
     @property
+    @MoserValidation(validated=True)
     def _page_height(self):
         return self.tiff_files[0].pages[0].imagelength
 
     @property
+    @MoserValidation(validated=True)
     def _page_width(self):
         return self.tiff_files[0].pages[0].imagewidth
 
     @property
+    @MoserValidation(validated=True)
     def _num_averaged_frames(self):
         """ Number of requested frames are averaged to form one saved frame. """
         match = re.search(r'hScan2D\.logAverageFactor = (?P<num_avg_frames>.*)', self.header)
@@ -202,39 +220,46 @@ class BaseScan():
         return num_averaged_frames
 
     @property
+    @MoserValidation(validated=True)
     def num_fields(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 
     @property
+    @MoserValidation(validated=True)
     def field_depths(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 
     # Properties from here on are not strictly necessary
     @property
+    @MoserValidation(validated=True)
     def fps(self):
         match = re.search(r'hRoiManager\.scanVolumeRate = (?P<fps>.*)',self.header)
         fps = float(match.group('fps')) if match else None
         return fps
 
     @property
+    @MoserValidation(validated=True)
     def spatial_fill_fraction(self):
         match = re.search(r'hScan2D\.fillFractionSpatial = (?P<spatial_ff>.*)', self.header)
         spatial_fill_fraction = float(match.group('spatial_ff')) if match else None
         return spatial_fill_fraction
 
     @property
+    @MoserValidation(validated=True)
     def temporal_fill_fraction(self):
         match = re.search(r'hScan2D\.fillFractionTemporal = (?P<temporal_ff>.*)', self.header)
         temporal_fill_fraction = float(match.group('temporal_ff')) if match else None
         return temporal_fill_fraction
 
     @property
+    @MoserValidation(validated=True)
     def scanner_type(self):
         match = re.search(r"hScan2D\.scannerType = '(?P<scanner_type>.*)'", self.header)
         scanner_type = match.group('scanner_type') if match else None
         return scanner_type
 
     @property
+    @MoserValidation(validated=True)
     def motor_position_at_zero(self):
         """ Motor position (x, y and z in microns) corresponding to the scan's (0, 0, 0)
         point. For non-multiroi scans, (x=0, y=0) marks the center of the FOV."""
@@ -243,6 +268,7 @@ class BaseScan():
         return motor_position
 
     @property
+    @MoserValidation(validated=True)
     def initial_secondary_z(self):
         """ Initial position in z (microns) of the secondary motor (if any)."""
         match = re.search(r'hMotors\.motorPosition = (?P<motor_position>.*)', self.header)
@@ -254,12 +280,14 @@ class BaseScan():
         return secondary_z
 
     @property
+    @MoserValidation(validated=True)
     def _initial_frame_number(self):
         match = re.search(r'\sframeNumbers = (?P<frame_number>.*)', self.header)
         initial_frame_number = int(match.group('frame_number')) if match else None
         return initial_frame_number
 
     @property
+    @MoserValidation(validated=True)
     def _num_fly_back_lines(self):
         """ Lines/mirror cycles that it takes to move from one depth to the next."""
         match = re.search(r'hScan2D\.flybackTimePerFrame = (?P<fly_back_seconds>.*)',
@@ -272,6 +300,7 @@ class BaseScan():
         return num_fly_back_lines
 
     @property
+    @MoserValidation(validated=True)
     def _num_lines_between_fields(self):
         """ Lines/mirror cycles scanned from the start of one field to the start of the
         next. """
@@ -283,10 +312,12 @@ class BaseScan():
         return num_lines_between_fields
 
     @property
+    @MoserValidation(validated=True)
     def is_slow_stack_with_fastZ(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 
     @property
+    @MoserValidation(validated=True)
     def field_offsets(self):
         raise NotImplementedError('Subclasses of BaseScan must implement this property')
 
@@ -468,33 +499,40 @@ class BaseScan5(BaseScan):
     height and width."""
 
     @property
+    @MoserValidation(validated=True)
     def num_fields(self):
         return self.num_scanning_depths # one field per scanning depth
 
     @property
+    @MoserValidation(validated=True)
     def field_depths(self):
         return self.scanning_depths
 
     @property
+    @MoserValidation(validated=True)
     def image_height(self):
         return self._page_height
 
     @property
+    @MoserValidation(validated=True)
     def image_width(self):
         return self._page_width
 
     @property
+    @MoserValidation(validated=True)
     def shape(self):
         return (self.num_fields, self.image_height, self.image_width, self.num_channels,
                 self.num_frames)
 
     @property
+    @MoserValidation(validated=True)
     def zoom(self):
         match = re.search(r'hRoiManager\.scanZoomFactor = (?P<zoom>.*)', self.header)
         zoom = float(match.group('zoom')) if match else None
         return zoom
 
     @property
+    @MoserValidation(validated=True)
     def is_slow_stack_with_fastZ(self):
         match = re.search(r'hMotors\.motorSecondMotorZEnable = (?P<uses_fastZ>.*)',
                           self.header)
@@ -502,6 +540,7 @@ class BaseScan5(BaseScan):
         return self.is_slow_stack and uses_fastZ
 
     @property
+    @MoserValidation(validated=True)
     def field_offsets(self):
         """ Seconds elapsed between start of frame scanning and each pixel."""
         next_line = 0
@@ -512,6 +551,7 @@ class BaseScan5(BaseScan):
         return field_offsets
 
     @property
+    @MoserValidation(validated=True)
     def _y_angle_scale_factor(self):
         """ Scan angles in y are scaled by this factor, shrinking the angle range."""
         match = re.search(r'hRoiManager\.scanAngleMultiplierSlow = (?P<angle_scaler>.*)',
@@ -520,6 +560,7 @@ class BaseScan5(BaseScan):
         return y_angle_scaler
 
     @property
+    @MoserValidation(validated=True)
     def _x_angle_scale_factor(self):
         """ Scan angles in x are scaled by this factor, shrinking the angle range."""
         match = re.search(r'hRoiManager\.scanAngleMultiplierFast = (?P<angle_scaler>.*)',
@@ -582,6 +623,7 @@ class Scan5Point2(BaseScan5):
     """ ScanImage 5.2. Addition of FOV measures in microns."""
 
     @property
+    @MoserValidation(validated=True)
     def image_height_in_microns(self):
         match = re.search(r'hRoiManager\.imagingFovUm = (?P<fov_corners>.*)', self.header)
         if match:
@@ -592,6 +634,7 @@ class Scan5Point2(BaseScan5):
         return image_height_in_microns
 
     @property
+    @MoserValidation(validated=True)
     def image_width_in_microns(self):
         match = re.search(r'hRoiManager\.imagingFovUm = (?P<fov_corners>.*)', self.header)
         if match:
@@ -605,6 +648,7 @@ class Scan5Point2(BaseScan5):
 class NewerScan():
     """ Shared features among all newer scans. """
     @property
+    @MoserValidation(validated=True)
     def is_slow_stack_with_fastZ(self):
         match = re.search(r'hStackManager\.slowStackWithFastZ = (?P<slow_with_fastZ>.*)',
                           self.header)
@@ -688,52 +732,64 @@ class ScanMultiROI(NewerScan, BaseScan):
         self.fields = None
 
     @property
+    @MoserValidation(validated=True)
     def num_fields(self):
         return len(self.fields)
 
     @property
+    @MoserValidation(validated=True)
     def num_rois(self):
         return len(self.rois)
 
     @property
+    @MoserValidation(validated=True)
     def field_heights(self):
         return [field.height for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_widths(self):
         return [field.width for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_depths(self):
         return [field.depth for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_slices(self):
         return [field.slice_id for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_rois(self):
         return [field.roi_ids for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_masks(self):
         return [field.roi_mask for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_offsets(self):
         return [field.offset_mask for field in self.fields]
 
     @property
+    @MoserValidation(validated=True)
     def field_heights_in_microns(self):
         field_heights_in_degrees = [field.height_in_degrees for field in self.fields]
         return [self._degrees_to_microns(deg) for deg in field_heights_in_degrees]
 
     @property
+    @MoserValidation(validated=True)
     def field_widths_in_microns(self):
         field_widths_in_degrees = [field.width_in_degrees for field in self.fields]
         return [self._degrees_to_microns(deg) for deg in field_widths_in_degrees]
 
     @property
+    @MoserValidation(validated=True)
     def _num_fly_to_lines(self):
         """ Number of lines recorded in the tiff page while flying to a different field,
         i.e., distance between fields in the tiff page."""

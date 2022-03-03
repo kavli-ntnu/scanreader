@@ -129,6 +129,20 @@ class BaseScan():
         else:
             scanning_depths = None
         return scanning_depths
+        
+    @property
+    @MoserValidation(validated=True)
+    def requested_scanning_depths_relative(self):
+        match = re.search(r'hStackManager\.zsRelative = (?P<zs_relative>.*)', self.header)
+        if match:
+            zs = matlabstr2py(match.group('zs_relative'))
+            if isinstance(zs, list):
+                scanning_depths_relative = [z[0] for z in zs]
+            else:
+                scanning_depths_relative = [zs]
+        else:
+            scanning_depths_relative = None
+        return scanning_depths_relative
 
     @property
     @MoserValidation(validated=True)
@@ -145,6 +159,12 @@ class BaseScan():
     @MoserValidation(validated=True)
     def scanning_depths(self):
         return self.requested_scanning_depths[:self.num_scanning_depths]
+
+    @property
+    @MoserValidation(validated=True)
+    def scanning_depths_relative(self):
+        return self.requested_scanning_depths_relative[:self.num_scanning_depths]
+
 
     @property
     @MoserValidation(validated=True)

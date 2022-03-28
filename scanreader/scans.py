@@ -21,6 +21,7 @@ BaseScan
                 Scan2019a
                 Scan2019b
                 Scan2020
+                Scan2021
     ScanMultiRoi
 """
 from tifffile import TiffFile
@@ -670,6 +671,114 @@ class Scan2019b(Scan5Point3):
 class Scan2020(Scan5Point3):
     """ ScanImage 2020"""
     pass
+
+class Scan2021(Scan5Point3):
+    """ ScanImage 2021"""
+
+    # New meta data that gets saved into the header when Mini2p unwarping
+    # toolbox was used to correct the data 
+    # 
+    # SI.Custom.MINI2P.MINI2P_Corrected | 'true' or '1' 
+    # SI.Custom.MINI2P.tf_path | str | transformMatrixDirectory
+    # SI.Custom.MINI2P.tfused | str | TransformMatrix_used
+    # SI.Custom.MINI2P.MINI2P_system | str | 
+    # SI.Custom.MINI2P.MINI2P_scope | str |
+    # SI.Custom.MINI2P.MINI2P_objective | str | 
+
+    # Similar entries will be created on the level of the MDF 
+    # transformMatrixDirectory
+    # system
+    # scope
+    # objective
+
+    # @property
+    # @MoserValidation(validated=True)
+    # def is_distortion_corrected(self):
+    #     match = re.search(r"SI.*.MINI2P_Corrected\s*?=\s*?(?P<is_corrected>.*)", string)
+    #     is_corrected = match.group("is_corrected").strip() in ("true", "1")
+    #     return is_corrected
+    @property
+    @MoserValidation(validated=True)
+    def transform_matrix_path(self):
+        ''' 
+        Path of transform matrix object (.mat file)
+        that was used for unwarping (correcting) raw scanimage data
+        '''
+        match = re.search(r'SI.*.tf_path\s*?=\s*?(?P<tf_path>.*)', self.header)
+        if match:
+            path = matlabstr2py(match.group('tf_path').strip())
+            return path
+        else:
+            return None
+
+    @property
+    @MoserValidation(validated=True)
+    def transform_matrix_index(self):
+        ''' 
+        Returns index in (matlab) transform matrix object 
+        (see transform_matrix_path() above)
+        that was used to correct the data. 
+        CAVE! 1-indexing
+        
+        '''
+        match = re.search(r'SI.*.tfused\s*?=\s*?(?P<tfused>.*)', self.header)
+
+        if match:
+            tfused = matlabstr2py(match.group('tfused').strip())
+            return int(tfused)
+        else:
+            return None
+
+    @property
+    @MoserValidation(validated=True)
+    def MINI2P_corrected(self):
+        ''' 
+        Was MINI2P unwarping applied to the data?
+        '''
+        match = re.search(r'SI.*.MINI2P_Corrected\s*?=\s*?(?P<corrected>.*)', self.header)
+
+        if match:
+            corrected = matlabstr2py(match.group('corrected').strip())
+            return corrected in [1, True]
+        else: 
+            return False
+
+    @property
+    @MoserValidation(validated=True)
+    def MINI2P_system(self):
+        # MINI 2P setup (system) name
+        match = re.search(r'SI.*.MINI2P_system\s*?=\s*?(?P<system>.*)', self.header)
+
+        if match:
+            mini2p_system = matlabstr2py(match.group('system').strip())
+            return mini2p_system
+        else: 
+            return None
+
+    @property
+    @MoserValidation(validated=True)
+    def MINI2P_scope(self):
+        # MINI 2P scope name
+        match = re.search(r'SI.*.MINI2P_scope\s*?=\s*?(?P<scope>.*)', self.header)
+
+        if match:
+            mini2p_scope = matlabstr2py(match.group('scope').strip())
+            return mini2p_scope
+        else: 
+            return None
+
+    @property
+    @MoserValidation(validated=True)
+    def MINI2P_objective(self):
+        # MINI 2P objective name
+        match = re.search(r'SI.*.MINI2P_objective\s*?=\s*?(?P<obj>.*)', self.header)
+
+        if match:
+            mini2p_objective = matlabstr2py(match.group('obj').strip())
+            return mini2p_objective
+        else: 
+            return None
+
 
 
 class ScanMultiROI(NewerScan, BaseScan):

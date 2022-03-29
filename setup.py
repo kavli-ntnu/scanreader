@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from setuptools import setup
 
-long_description = "Python TIFF Stack Reader for ScanImage 5 scans (including multiROI)."
+long_description = "Python TIFF Stack Reader for ScanImage scans (including multiROI)."
 
 setup(
     name='scanreader',
-    version='0.4.12',
-    description="Reader for ScanImage 5 scans (including slow stacks and multiROI).",
+    version='0.4.13',
+    description="Reader for ScanImage scans (including slow stacks and multiROI).",
     long_description=long_description,
     author='Erick Cobos',
     author_email='ecobos@bcm.edu',

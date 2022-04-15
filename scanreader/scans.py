@@ -164,8 +164,10 @@ class BaseScan():
     @property
     @MoserValidation(validated=True)
     def scanning_depths_relative(self):
-        return self.requested_scanning_depths_relative[:self.num_scanning_depths]
-
+        if self.requested_scanning_depths_relative is not None:
+            return self.requested_scanning_depths_relative[:self.num_scanning_depths]
+        else: 
+            return []
 
     @property
     @MoserValidation(validated=True)

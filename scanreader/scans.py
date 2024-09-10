@@ -21,7 +21,7 @@ BaseScan
                 Scan2019a
                 Scan2019b
                 Scan2020
-                Scan2021
+                Scan2021            # We added a bunch of Kavli-specific validation in this class
     ScanMultiRoi
 """
 from tifffile import TiffFile

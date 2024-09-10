@@ -24,7 +24,9 @@ _scans = {
           '2018a': scans.Scan2018a, '2018b': scans.Scan2018b,
           '2019a': scans.Scan2019a, '2019b': scans.Scan2019b,
           '2020': scans.Scan2020, 
-          '2021': scans.Scan2021
+          '2021': scans.Scan2021,
+          '2022': scans.Scan2021,
+          '2023': scans.Scan2021,
           }
 
 def read_scan(pathnames, dtype=np.int16, join_contiguous=False):

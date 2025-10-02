@@ -10,6 +10,7 @@ Example:
 from tifffile import TiffFile
 from glob import glob
 from os import path
+from typing import Union, List
 import numpy as np
 import re
 from .exceptions import ScanImageVersionError, PathnameError
@@ -29,7 +30,11 @@ _scans = {
           '2023': scans.Scan2021,
           }
 
-def read_scan(pathnames, dtype=np.int16, join_contiguous=False):
+def read_scan(
+        pathnames: Union[str, TiffFile, List[Union[str, TiffFile]]],
+        dtype=np.int16,
+        join_contiguous=False
+):
     """ Reads a ScanImage scan.
 
     Args:
@@ -42,6 +47,7 @@ def read_scan(pathnames, dtype=np.int16, join_contiguous=False):
     Returns:
         A Scan object (subclass of BaseScan) with metadata and data. See Readme for details.
     """
+    #
     # Expand wildcards
     filenames = expand_wildcard(pathnames)
     if len(filenames) == 0:
@@ -49,7 +55,11 @@ def read_scan(pathnames, dtype=np.int16, join_contiguous=False):
         raise PathnameError(error_msg)
 
     # Read version from one of the tiff files
-    with TiffFile(filenames[0]) as tiff_file:
+    if not isinstance(filenames[0], TiffFile):
+        with TiffFile(filenames[0]) as tiff_file:
+            file_info = tiff_file.pages[0].description + '\n' + tiff_file.pages[0].software
+    else:
+        tiff_file = filenames[0]
         file_info = tiff_file.pages[0].description + '\n' + tiff_file.pages[0].software
     version = get_scanimage_version(file_info)
 
@@ -78,13 +88,17 @@ def expand_wildcard(wildcard):
     Returns:
         A list of string. Absolute filenames.
     """
-    if isinstance(wildcard, str):
-        wildcard_list = [wildcard]
+    if isinstance(wildcard, (str, TiffFile)):
+        wildcard_list = [wildcard,]
     elif isinstance(wildcard, (tuple, list)):
         wildcard_list = wildcard
     else:
         error_msg = 'Expected string or list of strings, received {}'.format(wildcard)
         raise TypeError(error_msg)
+
+    # Skip expansion if input is one or several TiffFile objects
+    if any(isinstance(item, TiffFile) for item in wildcard_list):
+        return sorted(wildcard_list)
 
     # Expand wildcards
     rel_filenames = [glob(wildcard) for wildcard in wildcard_list]

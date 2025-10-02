@@ -75,7 +75,15 @@ class BaseScan():
     @MoserValidation(validated=True)
     def tiff_files(self):
         if self._tiff_files is None:
-            self._tiff_files = [TiffFile(filename) for filename in self.filenames]
+            tif_files = []
+            for filename in self.filenames:
+                if isinstance(filename, str):
+                    tif_files.append(TiffFile(filename))
+                elif isinstance(filename, TiffFile):
+                    tif_files.append(filename)
+                else:
+                    raise TypeError('Filenames must be strings or TiffFile objects')
+            self._tiff_files = tif_files
         return self._tiff_files
 
     @tiff_files.deleter

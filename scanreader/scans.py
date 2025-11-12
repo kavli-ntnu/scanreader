@@ -754,11 +754,11 @@ class Scan2021(Scan5Point3):
     @property
     @MoserValidation(validated=True)
     def MINI2P_transform_matrix_path(self):
-        ''' 
+        """ 
         Path of transform matrix object (.mat file)
         that was used for unwarping (correcting) raw scanimage data
         SI.Custom.MINI2P.tf_path | str | transformMatrixDirectory
-        '''
+        """
         match = re.search(r'SI.*.tf_path\s*?=\s*?(?P<tf_path>.*)', self.header)
         if match:
             path = matlabstr2py(match.group('tf_path').strip())
@@ -769,28 +769,35 @@ class Scan2021(Scan5Point3):
     @property
     @MoserValidation(validated=True)
     def MINI2P_transform_matrix_index(self):
-        ''' 
+        """ 
         Returns index in (matlab) transform matrix object 
         (see transform_matrix_path() above)
-        that was used to correct the data. 
-        WARNING! 1-indexing
-        
-        '''
+        that was used to correct the data. WARNING! 1-indexing
+
+        For multiplane data, list instead of int
+        """
         match = re.search(r'SI.*.tfused\s*?=\s*?(?P<tfused>.*)', self.header)
 
         if match:
             tfused = matlabstr2py(match.group('tfused').strip())
-            return int(tfused)
+            try:
+                return int(tfused)
+            except ValueError as e:
+                # May be a weird variant of a matlab array instead, space-separated
+                if " " in tfused:
+                    return [int(char) for char in tfused.split()]
+                else:
+                    raise e
         else:
             return None
 
     @property
     @MoserValidation(validated=True)
     def MINI2P_corrected(self):
-        ''' 
+        """ 
         Was MINI2P unwarping applied to the data?
         SI.Custom.MINI2P.MINI2P_Corrected | 'true' or '1' 
-        '''
+        """
         match = re.search(r'SI.*.MINI2P_Corrected\s*?=\s*?(?P<corrected>.*)', self.header)
 
         if match:
@@ -802,9 +809,9 @@ class Scan2021(Scan5Point3):
     @property
     @MoserValidation(validated=True)
     def MINI2P_system(self):
-        '''
+        """
         MINI 2P setup (system) name
-        '''
+        """
         match = re.search(r'SI.*.MINI2P_system\s*?=\s*?(?P<system>.*)', self.header)
 
         if match:
@@ -816,9 +823,9 @@ class Scan2021(Scan5Point3):
     @property
     @MoserValidation(validated=True)
     def MINI2P_scope(self):
-        '''
+        """
         MINI 2P scope name
-        '''
+        """
         match = re.search(r'SI.*.MINI2P_scope\s*?=\s*?(?P<scope>.*)', self.header)
 
         if match:
@@ -830,9 +837,9 @@ class Scan2021(Scan5Point3):
     @property
     @MoserValidation(validated=True)
     def MINI2P_objective(self):
-        '''
+        """
         MINI 2P objective name
-        '''
+        """
         match = re.search(r'SI.*.MINI2P_objective\s*?=\s*?(?P<obj>.*)', self.header)
 
         if match:
